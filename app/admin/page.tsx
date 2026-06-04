@@ -68,7 +68,7 @@ function MemberSection() {
   }
 
   return (
-    <section className="rounded-lg bg-white p-5 shadow-card">
+    <section className="rounded-xl border border-gray-200/60 bg-white/90 p-5 shadow-elevated backdrop-blur-sm">
       <h2 className="mb-3 text-base font-semibold text-gray-900">팀원</h2>
 
       <ul className="mb-4 flex flex-col gap-1">
@@ -175,7 +175,7 @@ function EquipmentSection() {
   }
 
   return (
-    <section className="rounded-lg bg-white p-5 shadow-card">
+    <section className="rounded-xl border border-gray-200/60 bg-white/90 p-5 shadow-elevated backdrop-blur-sm">
       <h2 className="mb-3 text-base font-semibold text-gray-900">설비 목록</h2>
 
       <ul className="mb-4 flex flex-col gap-1">

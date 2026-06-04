@@ -16,17 +16,17 @@ export default function ViewToggle({
   onChange: (v: ViewMode) => void;
 }) {
   return (
-    <div className="inline-flex rounded-card bg-gray-100 p-1">
+    <div className="inline-flex rounded-full border border-gray-200/80 bg-white/80 p-1 shadow-xs backdrop-blur">
       {OPTIONS.map((opt) => {
         const active = opt.value === value;
         return (
           <button
             key={opt.value}
             onClick={() => onChange(opt.value)}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+            className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
               active
-                ? "bg-samsung text-white shadow-sm"
-                : "text-gray-700 hover:text-gray-900"
+                ? "bg-samsung text-white shadow-glow"
+                : "text-gray-500 hover:text-gray-900"
             }`}
           >
             {opt.label}

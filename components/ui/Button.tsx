@@ -11,11 +11,13 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary: "bg-samsung text-white hover:bg-samsung-hover shadow-sm",
+  primary:
+    "bg-samsung text-white shadow-glow hover:bg-samsung-hover hover:-translate-y-px active:translate-y-0",
   secondary:
-    "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 hover:border-gray-400",
-  ghost: "bg-transparent text-gray-700 hover:bg-gray-100",
-  danger: "bg-white text-danger border border-gray-300 hover:bg-red-50 hover:border-danger",
+    "bg-white text-gray-700 border border-gray-200 shadow-xs hover:bg-gray-50 hover:border-gray-300 hover:-translate-y-px active:translate-y-0",
+  ghost: "bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+  danger:
+    "bg-white text-danger border border-gray-200 shadow-xs hover:bg-red-50 hover:border-danger/40",
 };
 
 const sizes: Record<Size, string> = {
@@ -30,7 +32,7 @@ const Button = forwardRef<HTMLButtonElement, Props>(function Button(
   return (
     <button
       ref={ref}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-card font-medium disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-full font-semibold disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     />
   );

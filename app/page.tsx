@@ -64,7 +64,7 @@ export default function DashboardPage() {
         {!isSupabaseConfigured ? (
           <SetupBanner />
         ) : (
-          <div className="flex flex-col gap-4 lg:flex-row">
+          <div className="animate-fade-up flex flex-col gap-5 lg:flex-row">
             <section className="min-w-0 flex-1">
               {error ? (
                 <div className="rounded-lg bg-white p-6 text-sm text-danger shadow-card">

@@ -61,10 +61,16 @@ export default function RandomPicker({ open, candidates, onConfirm, onClose }: P
           가능 인원 {candidates.length}명 중 랜덤으로 1명을 뽑습니다.
         </p>
 
-        <div className="flex h-28 w-full items-center justify-center rounded-lg bg-gray-100">
+        <div
+          className={`relative flex h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-samsung-pale to-white ring-1 transition-all ${
+            winner && !spinning
+              ? "shadow-glow ring-samsung/30"
+              : "ring-samsung/10"
+          }`}
+        >
           <span
-            className={`text-4xl font-bold text-samsung transition-all duration-100 ${
-              spinning ? "scale-95 blur-[1px] opacity-80" : "scale-110"
+            className={`text-5xl font-extrabold text-samsung transition-all duration-100 ${
+              spinning ? "scale-90 opacity-70 blur-[1.5px]" : "scale-110"
             }`}
           >
             {displayed?.name ?? "—"}

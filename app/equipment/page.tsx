@@ -65,7 +65,7 @@ export default function EquipmentPage() {
             </div>
 
             {/* 현재 사용 불가 */}
-            <section className="mb-6 rounded-lg bg-white p-5 shadow-card">
+            <section className="mb-6 rounded-xl border border-gray-200/60 bg-white/90 p-5 shadow-elevated backdrop-blur-sm">
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-gray-900">
                 <span className="text-danger">🔴</span> 현재 사용 불가 (오늘 기준)
               </h2>
@@ -86,7 +86,7 @@ export default function EquipmentPage() {
             </section>
 
             {/* 예정된 불가 */}
-            <section className="rounded-lg bg-white p-5 shadow-card">
+            <section className="rounded-xl border border-gray-200/60 bg-white/90 p-5 shadow-elevated backdrop-blur-sm">
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-gray-900">
                 📅 예정된 불가
               </h2>

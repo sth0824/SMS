@@ -58,19 +58,23 @@ export default function CalendarCell({
   return (
     <button
       onClick={() => onClick(day.iso)}
-      className={`relative flex h-[120px] flex-col gap-0.5 border border-gray-200 p-1.5 text-left align-top transition hover:bg-samsung-pale/40 sm:h-[120px] max-sm:h-20 ${
-        day.inMonth ? "bg-white" : "bg-gray-100/60"
+      className={`group relative flex h-[124px] flex-col gap-0.5 rounded-card border p-1.5 text-left align-top transition hover:-translate-y-px hover:border-samsung/30 hover:shadow-card max-sm:h-[88px] ${
+        day.isToday
+          ? "border-samsung/40 bg-samsung-pale/40 ring-1 ring-samsung/20"
+          : day.inMonth
+          ? "border-gray-200/70 bg-white"
+          : "border-transparent bg-gray-50/60"
       }`}
     >
       {/* 날짜 숫자 + 잔업가능 배지 */}
       <div className="flex items-start justify-between">
         <span
-          className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-medium ${
+          className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold transition ${
             day.isToday
-              ? "bg-samsung text-white"
+              ? "bg-samsung text-white shadow-glow"
               : day.inMonth
               ? weekdayColor
-              : "text-gray-400"
+              : "text-gray-300"
           }`}
         >
           {day.day}
@@ -78,10 +82,10 @@ export default function CalendarCell({
 
         {showOvertime && dayAvail.length > 0 && (
           <span
-            className="flex items-center gap-0.5 rounded-full bg-samsung-pale px-1.5 py-0.5 text-[11px] font-semibold text-samsung"
+            className="flex items-center gap-1 rounded-full bg-samsung/10 px-1.5 py-0.5 text-[11px] font-bold text-samsung"
             title={`잔업 가능 ${dayAvail.length}명`}
           >
-            <span className="text-samsung">●</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-samsung" />
             {dayAvail.length}
           </span>
         )}
@@ -123,8 +127,11 @@ export default function CalendarCell({
 
       {/* 잔업 확정 */}
       {showOvertime && assignment && (
-        <div className="mt-auto truncate text-[11px] font-semibold text-samsung underline decoration-samsung/40 underline-offset-2">
-          잔업: {memberMap.get(assignment.member_id)?.name ?? "?"}
+        <div className="mt-auto flex items-center gap-1 truncate rounded-md bg-gradient-to-r from-samsung to-samsung-hover px-1.5 py-0.5 text-[11px] font-semibold text-white shadow-xs">
+          <span className="opacity-70">잔업</span>
+          <span className="truncate">
+            {memberMap.get(assignment.member_id)?.name ?? "?"}
+          </span>
         </div>
       )}
     </button>
