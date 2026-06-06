@@ -32,8 +32,15 @@ export interface Absence {
   start_date: string;
   end_date: string;
   type: AbsenceType;
+  /** 직접 입력한 유형 이름. 있으면 캘린더에 이 글자가 표시된다. */
+  label?: string | null;
   memo?: string | null;
   created_at?: string;
+}
+
+/** 캘린더/목록에 표시할 부재 유형 텍스트 (커스텀 라벨 우선) */
+export function absenceLabel(a: Pick<Absence, "type" | "label">): string {
+  return a.label?.trim() ? a.label.trim() : ABSENCE_LABELS[a.type];
 }
 
 export interface Availability {

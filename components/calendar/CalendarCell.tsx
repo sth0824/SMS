@@ -9,6 +9,7 @@ import type {
   Member,
   ViewMode,
 } from "@/types";
+import { holidayName } from "@/lib/holidays";
 import AbsencePill from "./AbsencePill";
 
 interface Props {
@@ -17,8 +18,10 @@ interface Props {
   members: Member[];
   absences: Absence[];
   availability: Availability[];
-  assignment?: Assignment;
-  onClick: (iso: string) => void;
+  assignments: Assignment[];
+  selecting?: boolean;
+  onPointerDown: (iso: string) => void;
+  onPointerEnter: (iso: string) => void;
 }
 
 export default function CalendarCell({
@@ -27,8 +30,10 @@ export default function CalendarCell({
   members,
   absences,
   availability,
-  assignment,
-  onClick,
+  assignments,
+  selecting = false,
+  onPointerDown,
+  onPointerEnter,
 }: Props) {
   const memberMap = useMemo(() => {
     const m = new Map<string, Member>();
@@ -40,12 +45,13 @@ export default function CalendarCell({
     (a) => day.iso >= a.start_date && day.iso <= a.end_date
   );
   const dayAvail = availability.filter((a) => a.date === day.iso);
+  const holiday = holidayName(day.iso);
 
   const showAbsence = viewMode !== "overtime";
   const showOvertime = viewMode !== "attendance";
 
   const weekdayColor =
-    day.weekday === 0
+    holiday || day.weekday === 0
       ? "text-danger"
       : day.weekday === 6
       ? "text-samsung"
@@ -55,21 +61,28 @@ export default function CalendarCell({
   const visiblePills = dayAbsences.slice(0, MAX_PILLS);
   const extra = dayAbsences.length - visiblePills.length;
 
+  const assignNames = assignments
+    .map((a) => memberMap.get(a.member_id)?.name ?? "?")
+    .join(", ");
+
   return (
     <button
-      onClick={() => onClick(day.iso)}
+      onPointerDown={() => onPointerDown(day.iso)}
+      onPointerEnter={() => onPointerEnter(day.iso)}
       className={`group relative flex h-[124px] flex-col gap-0.5 rounded-card border p-1.5 text-left align-top transition hover:-translate-y-px hover:border-samsung/30 hover:shadow-card max-sm:h-[88px] ${
-        day.isToday
+        selecting
+          ? "border-samsung bg-samsung-pale ring-2 ring-samsung/40"
+          : day.isToday
           ? "border-samsung/40 bg-samsung-pale/40 ring-1 ring-samsung/20"
           : day.inMonth
           ? "border-gray-200/70 bg-white"
           : "border-transparent bg-gray-50/60"
       }`}
     >
-      {/* 날짜 숫자 + 잔업가능 배지 */}
-      <div className="flex items-start justify-between">
+      {/* 날짜 숫자 + 공휴일명 + 잔업가능 배지 */}
+      <div className="flex items-start gap-1">
         <span
-          className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold transition ${
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold transition ${
             day.isToday
               ? "bg-samsung text-white shadow-glow"
               : day.inMonth
@@ -80,9 +93,20 @@ export default function CalendarCell({
           {day.day}
         </span>
 
+        {holiday && (
+          <span
+            className={`mt-0.5 truncate text-[11px] font-semibold leading-tight ${
+              day.inMonth ? "text-danger" : "text-danger/40"
+            }`}
+            title={holiday}
+          >
+            {holiday}
+          </span>
+        )}
+
         {showOvertime && dayAvail.length > 0 && (
           <span
-            className="flex items-center gap-1 rounded-full bg-samsung/10 px-1.5 py-0.5 text-[11px] font-bold text-samsung"
+            className="ml-auto flex shrink-0 items-center gap-1 rounded-full bg-samsung/10 px-1.5 py-0.5 text-[11px] font-bold text-samsung"
             title={`잔업 가능 ${dayAvail.length}명`}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-samsung" />
@@ -103,6 +127,7 @@ export default function CalendarCell({
                   key={a.id}
                   name={m?.name ?? "?"}
                   type={a.type}
+                  label={a.label}
                 />
               );
             })}
@@ -118,6 +143,7 @@ export default function CalendarCell({
                 key={a.id}
                 name={memberMap.get(a.member_id)?.name ?? "?"}
                 type={a.type}
+                label={a.label}
                 dotOnly
               />
             ))}
@@ -125,13 +151,14 @@ export default function CalendarCell({
         </div>
       )}
 
-      {/* 잔업 확정 */}
-      {showOvertime && assignment && (
-        <div className="mt-auto flex items-center gap-1 truncate rounded-md bg-gradient-to-r from-samsung to-samsung-hover px-1.5 py-0.5 text-[11px] font-semibold text-white shadow-xs">
+      {/* 잔업 확정 (복수 인원) */}
+      {showOvertime && assignments.length > 0 && (
+        <div
+          className="mt-auto flex items-center gap-1 truncate rounded-md bg-gradient-to-r from-samsung to-samsung-hover px-1.5 py-0.5 text-[11px] font-semibold text-white shadow-xs"
+          title={`잔업: ${assignNames}`}
+        >
           <span className="opacity-70">잔업</span>
-          <span className="truncate">
-            {memberMap.get(assignment.member_id)?.name ?? "?"}
-          </span>
+          <span className="truncate">{assignNames}</span>
         </div>
       )}
     </button>

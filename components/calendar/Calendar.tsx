@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { buildMonthGrid, WEEKDAY_LABELS } from "@/lib/date";
 import type {
   Absence,
@@ -23,6 +23,8 @@ interface Props {
   onNext: () => void;
   onToday: () => void;
   onDateClick: (iso: string) => void;
+  /** 날짜를 드래그로 범위 선택했을 때 (start <= end) */
+  onRangeSelect: (start: string, end: string) => void;
 }
 
 export default function Calendar({
@@ -37,13 +39,47 @@ export default function Calendar({
   onNext,
   onToday,
   onDateClick,
+  onRangeSelect,
 }: Props) {
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
-  const assignmentByDate = useMemo(() => {
-    const m = new Map<string, Assignment>();
-    assignments.forEach((a) => m.set(a.date, a));
+  const assignmentsByDate = useMemo(() => {
+    const m = new Map<string, Assignment[]>();
+    assignments.forEach((a) => {
+      const arr = m.get(a.date);
+      if (arr) arr.push(a);
+      else m.set(a.date, [a]);
+    });
     return m;
   }, [assignments]);
+
+  // ---- 드래그 범위 선택 ----
+  const [dragStart, setDragStart] = useState<string | null>(null);
+  const [dragEnd, setDragEnd] = useState<string | null>(null);
+
+  const selectedRange = useMemo(() => {
+    if (!dragStart || !dragEnd) return null;
+    return dragStart <= dragEnd
+      ? { lo: dragStart, hi: dragEnd }
+      : { lo: dragEnd, hi: dragStart };
+  }, [dragStart, dragEnd]);
+
+  useEffect(() => {
+    if (!dragStart) return;
+    function onUp() {
+      const s = dragStart!;
+      const e = dragEnd ?? dragStart!;
+      const lo = s <= e ? s : e;
+      const hi = s <= e ? e : s;
+      // 같은 칸이면 단일 클릭(상세), 여러 칸이면 범위 선택(부재 등록)
+      if (lo === hi) onDateClick(lo);
+      else onRangeSelect(lo, hi);
+      setDragStart(null);
+      setDragEnd(null);
+    }
+    window.addEventListener("pointerup", onUp);
+    return () => window.removeEventListener("pointerup", onUp);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragStart, dragEnd]);
 
   return (
     <div className="rounded-xl border border-gray-200/60 bg-white/90 p-4 shadow-elevated backdrop-blur-sm sm:p-5">
@@ -78,6 +114,10 @@ export default function Calendar({
         </div>
       </div>
 
+      <p className="mb-2 text-xs text-gray-400">
+        날짜를 드래그하면 여러 날에 부재를 한 번에 등록할 수 있어요.
+      </p>
+
       <div className="min-w-0 overflow-x-auto">
         <div className="min-w-[640px]">
           {/* 요일 헤더 */}
@@ -95,7 +135,7 @@ export default function Calendar({
           </div>
 
           {/* 날짜 그리드 */}
-          <div className="grid grid-cols-7 gap-1.5">
+          <div className="grid select-none grid-cols-7 gap-1.5">
             {grid.map((day) => (
               <CalendarCell
                 key={day.iso}
@@ -104,8 +144,19 @@ export default function Calendar({
                 members={members}
                 absences={absences}
                 availability={availability}
-                assignment={assignmentByDate.get(day.iso)}
-                onClick={onDateClick}
+                assignments={assignmentsByDate.get(day.iso) ?? []}
+                selecting={
+                  !!selectedRange &&
+                  day.iso >= selectedRange.lo &&
+                  day.iso <= selectedRange.hi
+                }
+                onPointerDown={(iso) => {
+                  setDragStart(iso);
+                  setDragEnd(iso);
+                }}
+                onPointerEnter={(iso) => {
+                  if (dragStart) setDragEnd(iso);
+                }}
               />
             ))}
           </div>

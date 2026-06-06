@@ -1,0 +1,45 @@
+import Holidays from "date-holidays";
+import { addDays, parseISO } from "date-fns";
+import { toISODate } from "./date";
+
+// date-holidays 인스턴스는 비싸므로 1회 생성 후 재사용한다.
+// KR: 신정/삼일절/어린이날/현충일/광복절/개천절/한글날 + 설날·추석(음력)·
+//     부처님오신날 + 대체공휴일까지 매년 자동 계산된다.
+let _hd: Holidays | null = null;
+function hd(): Holidays {
+  if (!_hd) _hd = new Holidays("KR");
+  return _hd;
+}
+
+/** 해당 ISO 날짜가 공휴일이면 이름을, 아니면 null 을 반환 */
+export function holidayName(iso: string): string | null {
+  const res = hd().isHoliday(parseISO(iso));
+  if (!res || res.length === 0) return null;
+  const pub = res.find((r) => r.type === "public") ?? res[0];
+  return pub?.name ?? null;
+}
+
+export function isWeekend(iso: string): boolean {
+  const w = parseISO(iso).getDay();
+  return w === 0 || w === 6;
+}
+
+/** 주말이거나 공휴일이면 true (= 연차에서 제외 대상) */
+export function isNonWorkingDay(iso: string): boolean {
+  return isWeekend(iso) || holidayName(iso) !== null;
+}
+
+/**
+ * [start, end] 구간(양끝 포함)에서 주말·공휴일을 제외한 근무일 ISO 목록.
+ */
+export function workingDaysBetween(start: string, end: string): string[] {
+  const out: string[] = [];
+  let cur = parseISO(start);
+  const last = parseISO(end);
+  while (cur <= last) {
+    const iso = toISODate(cur);
+    if (!isNonWorkingDay(iso)) out.push(iso);
+    cur = addDays(cur, 1);
+  }
+  return out;
+}
