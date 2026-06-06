@@ -59,8 +59,8 @@ export default function EquipmentPage() {
           <SetupBanner />
         ) : (
           <>
-            <div className="mb-4 flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-900">사용 불가 설비 알림판</h1>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">사용 불가 설비 알림판</h1>
               <Button onClick={() => setModalOpen(true)}>+ 불가 등록</Button>
             </div>
 
