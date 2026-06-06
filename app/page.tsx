@@ -128,6 +128,9 @@ export default function DashboardPage() {
           end={rangeAction.end}
           members={members}
           absences={absences}
+          availability={availability.filter(
+            (a) => a.date >= rangeAction.start && a.date <= rangeAction.end
+          )}
           onClose={() => setRangeAction(null)}
           onChanged={() => mutate()}
           onRegister={(start, end) => {

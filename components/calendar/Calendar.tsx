@@ -115,7 +115,7 @@ export default function Calendar({
       </div>
 
       <p className="mb-2 text-xs text-gray-400">
-        날짜를 드래그하면 여러 날에 부재를 한 번에 등록할 수 있어요.
+        날짜를 드래그하면 여러 날을 한 번에 등록할 수 있어요.
       </p>
 
       <div className="min-w-0 overflow-x-auto">

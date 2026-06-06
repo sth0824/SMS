@@ -10,9 +10,10 @@ import {
   ABSENCE_COLORS,
   absenceLabel,
   type Absence,
+  type Availability,
   type Member,
 } from "@/types";
-import { addAvailability, deleteAbsence } from "@/lib/queries";
+import { addAvailability, deleteAbsence, removeAvailability } from "@/lib/queries";
 
 interface Props {
   open: boolean;
@@ -20,6 +21,7 @@ interface Props {
   end: string;
   members: Member[];
   absences: Absence[];
+  availability: Availability[];
   onClose: () => void;
   onChanged: () => void;
   /** "부재 등록" 선택 시 (start <= end) */
@@ -32,6 +34,7 @@ export default function RangeActionModal({
   end,
   members,
   absences,
+  availability,
   onClose,
   onChanged,
   onRegister,
@@ -41,6 +44,9 @@ export default function RangeActionModal({
   // 잔업 가능 일괄 추가
   const [availIds, setAvailIds] = useState<Set<string>>(new Set());
   const [includeNonWork, setIncludeNonWork] = useState(true);
+
+  // 잔업 가능 일괄 삭제
+  const [removeIds, setRemoveIds] = useState<Set<string>>(new Set());
 
   const memberMap = useMemo(() => {
     const m = new Map<string, Member>();
@@ -70,6 +76,36 @@ export default function RangeActionModal({
       const ids = Array.from(availIds);
       await Promise.all(
         ids.flatMap((mid) => dates.map((d) => addAvailability(mid, d)))
+      );
+      onChanged();
+      onClose();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // 이 기간에 잔업 가능 등록된 멤버 (중복 제거)
+  const membersWithAvail = useMemo(() => {
+    const ids = new Set(availability.map((a) => a.member_id));
+    return members.filter((m) => ids.has(m.id));
+  }, [availability, members]);
+
+  function toggleRemove(id: string) {
+    setRemoveIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  async function applyRemove() {
+    if (removeIds.size === 0) return;
+    const dates = daysBetween(start, end);
+    setBusy(true);
+    try {
+      const ids = Array.from(removeIds);
+      await Promise.all(
+        ids.flatMap((mid) => dates.map((d) => removeAvailability(mid, d)))
       );
       onChanged();
       onClose();
@@ -169,6 +205,49 @@ export default function RangeActionModal({
           이 기간에 잔업 가능 추가 ({availIds.size}명)
         </Button>
       </section>
+
+      {/* 잔업 가능 일괄 삭제 */}
+      {membersWithAvail.length > 0 && (
+        <>
+          <hr className="my-4 border-gray-200" />
+          <section className="mb-1">
+            <h3 className="mb-2 text-sm font-semibold text-gray-700">
+              ⭕ 이 기간에 잔업 가능 삭제
+              <span className="ml-2 text-xs font-normal text-gray-400">
+                인원을 눌러 선택
+              </span>
+            </h3>
+            <div className="mb-3 flex flex-wrap gap-2">
+              {membersWithAvail.map((m) => {
+                const on = removeIds.has(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => toggleRemove(m.id)}
+                    className={`rounded-full border px-3 py-1 text-sm font-medium transition ${
+                      on
+                        ? "border-danger bg-danger text-white"
+                        : "border-gray-300 text-gray-500 hover:bg-gray-100"
+                    }`}
+                  >
+                    {m.name}
+                  </button>
+                );
+              })}
+            </div>
+            <Button
+              variant="danger"
+              className="w-full"
+              onClick={applyRemove}
+              disabled={removeIds.size === 0 || busy}
+            >
+              이 기간에 잔업 가능 삭제 ({removeIds.size}명)
+            </Button>
+          </section>
+        </>
+      )}
 
       <hr className="my-4 border-gray-200" />
 
