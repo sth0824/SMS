@@ -52,16 +52,26 @@ export async function fetchAbsences(start: string, end: string): Promise<Absence
   return data ?? [];
 }
 
-export async function createAbsence(input: {
+export interface AbsenceInput {
   member_id: string;
   start_date: string;
   end_date: string;
   type: AbsenceType;
-  memo?: string;
-}): Promise<Absence> {
+  label?: string | null;
+  memo?: string | null;
+}
+
+export async function createAbsence(input: AbsenceInput): Promise<Absence> {
   const { data, error } = await supabase.from("absences").insert(input).select().single();
   if (error) throw error;
   return data;
+}
+
+/** 여러 부재를 한 번에 등록 (연차 주말·공휴일 제외 분할 등록용) */
+export async function createAbsences(rows: AbsenceInput[]): Promise<void> {
+  if (rows.length === 0) return;
+  const { error } = await supabase.from("absences").insert(rows);
+  if (error) throw error;
 }
 
 export async function updateAbsence(id: string, patch: Partial<Absence>): Promise<void> {
@@ -117,13 +127,24 @@ export async function setAssignment(
   member_id: string,
   method: OvertimeMethod
 ): Promise<void> {
-  // 하루 1명 정책: 기존 확정자가 있으면 덮어쓴다.
+  // 복수 인원 허용: 같은 날 같은 사람만 중복 방지(upsert), 여러 명은 모두 등록된다.
   const { error } = await supabase
     .from("overtime_assignments")
-    .upsert({ date, member_id, method }, { onConflict: "date" });
+    .upsert({ date, member_id, method }, { onConflict: "date,member_id" });
   if (error) throw error;
 }
 
+/** 특정 날짜의 한 명만 확정 해제 */
+export async function removeAssignment(date: string, member_id: string): Promise<void> {
+  const { error } = await supabase
+    .from("overtime_assignments")
+    .delete()
+    .eq("date", date)
+    .eq("member_id", member_id);
+  if (error) throw error;
+}
+
+/** 특정 날짜의 모든 확정자 해제 */
 export async function clearAssignment(date: string): Promise<void> {
   const { error } = await supabase.from("overtime_assignments").delete().eq("date", date);
   if (error) throw error;

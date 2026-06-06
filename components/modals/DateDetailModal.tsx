@@ -16,7 +16,7 @@ import {
 } from "@/types";
 import {
   addAvailability,
-  clearAssignment,
+  removeAssignment,
   removeAvailability,
   setAssignment,
 } from "@/lib/queries";
@@ -27,7 +27,7 @@ interface Props {
   members: Member[];
   absences: Absence[];
   availability: Availability[];
-  assignment?: Assignment;
+  assignments: Assignment[];
   onClose: () => void;
   onChanged: () => void;
   onEditAbsence: (a: Absence) => void;
@@ -40,7 +40,7 @@ export default function DateDetailModal({
   members,
   absences,
   availability,
-  assignment,
+  assignments,
   onClose,
   onChanged,
   onEditAbsence,
@@ -97,15 +97,19 @@ export default function DateDetailModal({
     }
   }
 
-  async function clear() {
+  async function removeOne(memberId: string) {
     setBusy(true);
     try {
-      await clearAssignment(date);
+      await removeAssignment(date, memberId);
       onChanged();
     } finally {
       setBusy(false);
     }
   }
+
+  const assignedIds = new Set(assignments.map((a) => a.member_id));
+  // 아직 확정되지 않은, 잔업 가능 인원만 추가로 지정/추첨 대상
+  const pickable = availableMembers.filter((m) => !assignedIds.has(m.id));
 
   return (
     <>
@@ -182,21 +186,35 @@ export default function DateDetailModal({
 
         {/* 잔업 확정 섹션 */}
         <section>
-          <h3 className="mb-2 text-sm font-semibold text-gray-700">잔업 확정자</h3>
-          {assignment ? (
-            <div className="flex items-center justify-between rounded-card bg-samsung-pale px-3 py-2">
-              <span className="text-sm">
-                <span className="font-bold text-samsung-deep">
-                  {memberMap.get(assignment.member_id)?.name ?? "?"}
-                </span>
-                <span className="ml-2 text-xs text-gray-500">
-                  ({assignment.method === "random" ? "랜덤 추첨" : "합의 지정"})
-                </span>
-              </span>
-              <Button size="sm" variant="ghost" onClick={clear} disabled={busy}>
-                해제
-              </Button>
-            </div>
+          <h3 className="mb-2 text-sm font-semibold text-gray-700">
+            잔업 확정자 ({assignments.length}명)
+          </h3>
+          {assignments.length > 0 ? (
+            <ul className="flex flex-col gap-1">
+              {assignments.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex items-center justify-between rounded-card bg-samsung-pale px-3 py-2"
+                >
+                  <span className="text-sm">
+                    <span className="font-bold text-samsung-deep">
+                      {memberMap.get(a.member_id)?.name ?? "?"}
+                    </span>
+                    <span className="ml-2 text-xs text-gray-500">
+                      ({a.method === "random" ? "랜덤 추첨" : "합의 지정"})
+                    </span>
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => removeOne(a.member_id)}
+                    disabled={busy}
+                  >
+                    해제
+                  </Button>
+                </li>
+              ))}
+            </ul>
           ) : (
             <p className="mb-2 text-sm text-gray-400">아직 확정되지 않았습니다. (미정)</p>
           )}
@@ -206,11 +224,11 @@ export default function DateDetailModal({
               <Select
                 value={agreeId}
                 onChange={(e) => setAgreeId(e.target.value)}
-                disabled={availableMembers.length === 0}
+                disabled={pickable.length === 0}
                 className="flex-1"
               >
-                <option value="">합의로 지정…</option>
-                {availableMembers.map((m) => (
+                <option value="">합의로 추가…</option>
+                {pickable.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}
                   </option>
@@ -222,13 +240,13 @@ export default function DateDetailModal({
                 onClick={confirmAgree}
                 disabled={!agreeId || busy}
               >
-                지정
+                추가
               </Button>
             </div>
             <Button
               variant="primary"
               onClick={() => setPickerOpen(true)}
-              disabled={availableMembers.length === 0 || busy}
+              disabled={pickable.length === 0 || busy}
             >
               🎲 랜덤 추첨
             </Button>
@@ -243,7 +261,7 @@ export default function DateDetailModal({
 
       <RandomPicker
         open={pickerOpen}
-        candidates={availableMembers}
+        candidates={pickable}
         onConfirm={handleRandomConfirm}
         onClose={() => setPickerOpen(false)}
       />

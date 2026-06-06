@@ -31,3 +31,28 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
 export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea {...props} className={`${inputBase} ${props.className ?? ""}`} />;
 }
+
+export function Checkbox({
+  label,
+  checked,
+  onChange,
+  disabled,
+}: {
+  label: ReactNode;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-gray-700">
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-4 w-4 rounded border-gray-300 text-samsung accent-samsung focus:ring-samsung/30"
+      />
+      {label}
+    </label>
+  );
+}

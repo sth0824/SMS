@@ -3,19 +3,27 @@
 import { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import { Field, Select, TextInput, Textarea } from "@/components/ui/Field";
+import { Checkbox, Field, Select, TextInput, Textarea } from "@/components/ui/Field";
 import {
   ABSENCE_LABELS,
   type Absence,
   type AbsenceType,
   type Member,
 } from "@/types";
-import { createAbsence, deleteAbsence, updateAbsence } from "@/lib/queries";
+import {
+  createAbsence,
+  createAbsences,
+  deleteAbsence,
+  updateAbsence,
+} from "@/lib/queries";
+import { workingDaysBetween } from "@/lib/holidays";
 
 interface Props {
   open: boolean;
   members: Member[];
   defaultDate: string;
+  /** 드래그 범위 선택 시 종료일 (없으면 시작일과 동일) */
+  defaultEndDate?: string;
   /** 수정 모드일 때 기존 부재 */
   editing?: Absence | null;
   onClose: () => void;
@@ -28,6 +36,7 @@ export default function AbsenceModal({
   open,
   members,
   defaultDate,
+  defaultEndDate,
   editing,
   onClose,
   onSaved,
@@ -36,7 +45,9 @@ export default function AbsenceModal({
   const [start, setStart] = useState(defaultDate);
   const [end, setEnd] = useState(defaultDate);
   const [type, setType] = useState<AbsenceType>("annual");
+  const [label, setLabel] = useState("");
   const [memo, setMemo] = useState("");
+  const [skipNonWork, setSkipNonWork] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,16 +58,21 @@ export default function AbsenceModal({
       setStart(editing.start_date);
       setEnd(editing.end_date);
       setType(editing.type);
+      setLabel(editing.label ?? "");
       setMemo(editing.memo ?? "");
     } else {
       setMemberId(members[0]?.id ?? "");
       setStart(defaultDate);
-      setEnd(defaultDate);
+      setEnd(defaultEndDate ?? defaultDate);
       setType("annual");
+      setLabel("");
       setMemo("");
     }
+    setSkipNonWork(true);
     setError(null);
-  }, [open, editing, defaultDate, members]);
+  }, [open, editing, defaultDate, defaultEndDate, members]);
+
+  const isRange = end > start;
 
   async function handleSave() {
     if (!memberId) {
@@ -67,6 +83,7 @@ export default function AbsenceModal({
       setError("종료일이 시작일보다 빠릅니다.");
       return;
     }
+    const labelVal = label.trim() || null;
     setBusy(true);
     setError(null);
     try {
@@ -76,15 +93,35 @@ export default function AbsenceModal({
           start_date: start,
           end_date: end,
           type,
+          label: labelVal,
           memo: memo || null,
         });
+      } else if (isRange && skipNonWork) {
+        // 주말·공휴일을 제외한 근무일만 하루씩 분할 등록
+        const days = workingDaysBetween(start, end);
+        if (days.length === 0) {
+          setError("선택한 기간에 근무일이 없습니다. (전부 주말·공휴일)");
+          setBusy(false);
+          return;
+        }
+        await createAbsences(
+          days.map((d) => ({
+            member_id: memberId,
+            start_date: d,
+            end_date: d,
+            type,
+            label: labelVal,
+            memo: memo || null,
+          }))
+        );
       } else {
         await createAbsence({
           member_id: memberId,
           start_date: start,
           end_date: end,
           type,
-          memo: memo || undefined,
+          label: labelVal,
+          memo: memo || null,
         });
       }
       onSaved();
@@ -137,6 +174,16 @@ export default function AbsenceModal({
         </Field>
       </div>
 
+      {isRange && !editing && (
+        <Field label="기간 옵션">
+          <Checkbox
+            checked={skipNonWork}
+            onChange={setSkipNonWork}
+            label="주말·공휴일은 제외하고 등록"
+          />
+        </Field>
+      )}
+
       <Field label="유형">
         <div className="flex flex-wrap gap-2">
           {TYPES.map((t) => (
@@ -154,6 +201,15 @@ export default function AbsenceModal({
             </button>
           ))}
         </div>
+      </Field>
+
+      <Field label="유형 직접 입력 (선택)">
+        <TextInput
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder="비워두면 위 유형이 표시됩니다 · 예: 재택, 교육출장"
+          maxLength={10}
+        />
       </Field>
 
       <Field label="메모 (선택)">

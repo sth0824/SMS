@@ -7,6 +7,7 @@ import Calendar from "@/components/calendar/Calendar";
 import OvertimeCounter from "@/components/counter/OvertimeCounter";
 import DateDetailModal from "@/components/modals/DateDetailModal";
 import AbsenceModal from "@/components/modals/AbsenceModal";
+import RangeActionModal from "@/components/modals/RangeActionModal";
 import SetupBanner from "@/components/ui/SetupBanner";
 import { useCalendarData, useOvertimeCounts } from "@/lib/hooks";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -21,7 +22,12 @@ export default function DashboardPage() {
   const [detailDate, setDetailDate] = useState<string | null>(null);
   const [absenceModal, setAbsenceModal] = useState<{
     date: string;
+    end?: string;
     editing: Absence | null;
+  } | null>(null);
+  const [rangeAction, setRangeAction] = useState<{
+    start: string;
+    end: string;
   } | null>(null);
 
   const { data, isLoading, error, mutate } = useCalendarData(year, month);
@@ -32,8 +38,8 @@ export default function DashboardPage() {
   const availability = data?.availability ?? [];
   const assignments = data?.assignments ?? [];
 
-  const assignmentForDetail = useMemo(
-    () => assignments.find((a) => a.date === detailDate),
+  const assignmentsForDetail = useMemo(
+    () => assignments.filter((a) => a.date === detailDate),
     [assignments, detailDate]
   );
 
@@ -83,6 +89,7 @@ export default function DashboardPage() {
                   onNext={goNext}
                   onToday={goToday}
                   onDateClick={setDetailDate}
+                  onRangeSelect={(start, end) => setRangeAction({ start, end })}
                 />
               )}
               {isLoading && (
@@ -105,11 +112,28 @@ export default function DashboardPage() {
           members={members}
           absences={absences}
           availability={availability.filter((a) => a.date === detailDate)}
-          assignment={assignmentForDetail}
+          assignments={assignmentsForDetail}
           onClose={() => setDetailDate(null)}
           onChanged={() => mutate()}
           onEditAbsence={(a) => setAbsenceModal({ date: detailDate, editing: a })}
           onAddAbsence={(d) => setAbsenceModal({ date: d, editing: null })}
+        />
+      )}
+
+      {/* 드래그 범위 액션 (등록/삭제 선택) */}
+      {rangeAction && (
+        <RangeActionModal
+          open={!!rangeAction}
+          start={rangeAction.start}
+          end={rangeAction.end}
+          members={members}
+          absences={absences}
+          onClose={() => setRangeAction(null)}
+          onChanged={() => mutate()}
+          onRegister={(start, end) => {
+            setAbsenceModal({ date: start, end, editing: null });
+            setRangeAction(null);
+          }}
         />
       )}
 
@@ -119,6 +143,7 @@ export default function DashboardPage() {
           open={!!absenceModal}
           members={members}
           defaultDate={absenceModal.date}
+          defaultEndDate={absenceModal.end}
           editing={absenceModal.editing}
           onClose={() => setAbsenceModal(null)}
           onSaved={() => mutate()}
