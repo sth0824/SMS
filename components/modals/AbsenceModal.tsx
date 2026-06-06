@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import { Checkbox, Field, Select, TextInput, Textarea } from "@/components/ui/Field";
+import { Checkbox, Field, TextInput, Textarea } from "@/components/ui/Field";
 import {
   ABSENCE_LABELS,
   type Absence,
@@ -156,13 +156,22 @@ export default function AbsenceModal({
       maxWidth="max-w-md"
     >
       <Field label="팀원">
-        <Select value={memberId} onChange={(e) => setMemberId(e.target.value)}>
+        <div className="flex flex-wrap gap-2">
           {members.map((m) => (
-            <option key={m.id} value={m.id}>
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => setMemberId(m.id)}
+              className={`rounded-card border px-3 py-1.5 text-sm font-medium transition ${
+                memberId === m.id
+                  ? "border-samsung bg-samsung-pale text-samsung-deep"
+                  : "border-gray-300 text-gray-700 hover:bg-gray-100"
+              }`}
+            >
               {m.name}
-            </option>
+            </button>
           ))}
-        </Select>
+        </div>
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
