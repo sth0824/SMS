@@ -63,6 +63,18 @@ export function monthRange(year: number, month: number): { start: string; end: s
   };
 }
 
+/** [start, end] 구간(양끝 포함)의 모든 날짜 ISO 목록 */
+export function daysBetween(start: string, end: string): string[] {
+  const out: string[] = [];
+  let cur = parseISO(start);
+  const last = parseISO(end);
+  while (cur <= last) {
+    out.push(toISODate(cur));
+    cur = addDays(cur, 1);
+  }
+  return out;
+}
+
 /** 특정 ISO 날짜가 [start, end] 구간(둘 다 포함)에 들어가는지 */
 export function dateInRange(iso: string, start: string, end: string): boolean {
   return isWithinInterval(parseISO(iso), {
