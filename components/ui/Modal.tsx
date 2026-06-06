@@ -35,17 +35,17 @@ export default function Modal({
 
   return (
     <div
-      className="animate-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm"
+      className="animate-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm max-sm:items-end max-sm:p-0"
       onClick={onClose}
     >
       <div
-        className={`animate-pop w-full ${maxWidth} max-w-[92vw] overflow-hidden rounded-xl border border-white/60 bg-white shadow-pop`}
+        className={`animate-pop w-full ${maxWidth} max-w-[92vw] overflow-hidden rounded-xl border border-white/60 bg-white shadow-pop max-sm:flex max-sm:max-h-[92vh] max-sm:max-w-none max-sm:flex-col max-sm:rounded-b-none max-sm:rounded-t-2xl max-sm:border-0`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         {title !== undefined && (
-          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+          <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
             <h2 className="text-lg font-bold text-gray-900">{title}</h2>
             <button
               onClick={onClose}
@@ -56,7 +56,7 @@ export default function Modal({
             </button>
           </div>
         )}
-        <div className="px-5 py-4">{children}</div>
+        <div className="px-5 py-4 max-sm:overflow-y-auto">{children}</div>
       </div>
     </div>
   );

@@ -119,7 +119,7 @@ export default function Calendar({
       </p>
 
       <div className="min-w-0 overflow-x-auto">
-        <div className="min-w-[640px]">
+        <div className="min-w-0 sm:min-w-[640px]">
           {/* 요일 헤더 */}
           <div className="mb-1.5 grid grid-cols-7">
             {WEEKDAY_LABELS.map((w, i) => (
@@ -135,7 +135,7 @@ export default function Calendar({
           </div>
 
           {/* 날짜 그리드 */}
-          <div className="grid select-none grid-cols-7 gap-1.5">
+          <div className="grid select-none grid-cols-7 gap-1 sm:gap-1.5">
             {grid.map((day) => (
               <CalendarCell
                 key={day.iso}
