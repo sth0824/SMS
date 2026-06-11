@@ -1,5 +1,5 @@
 import Holidays from "date-holidays";
-import { addDays, parseISO } from "date-fns";
+import { addDays, parseISO, startOfWeek } from "date-fns";
 import { toISODate } from "./date";
 
 // date-holidays 인스턴스는 비싸므로 1회 생성 후 재사용한다.
@@ -17,6 +17,25 @@ export function holidayName(iso: string): string | null {
   if (!res || res.length === 0) return null;
   const pub = res.find((r) => r.type === "public") ?? res[0];
   return pub?.name ?? null;
+}
+
+/**
+ * 해당 연/월의 패밀리데이 ISO 날짜.
+ * 규칙: 월급날(21일)이 포함된 주(월~일)의 금요일.
+ *  - 21일이 평일이면 그 주 금요일, 주말이면 같은 주의 (앞쪽) 금요일에 쉰다.
+ *  - 금요일은 항상 19~25일 사이라 21일과 같은 달에 들어간다.
+ * @param month 0-indexed (0 = 1월)
+ */
+export function familyDayOf(year: number, month: number): string {
+  const payday = new Date(year, month, 21);
+  const monday = startOfWeek(payday, { weekStartsOn: 1 });
+  return toISODate(addDays(monday, 4)); // 월요일 + 4 = 금요일
+}
+
+/** 해당 ISO 날짜가 그 달의 패밀리데이인지 */
+export function isFamilyDay(iso: string): boolean {
+  const d = parseISO(iso);
+  return familyDayOf(d.getFullYear(), d.getMonth()) === iso;
 }
 
 export function isWeekend(iso: string): boolean {

@@ -18,7 +18,7 @@ create table if not exists absences (
   member_id uuid references members(id) on delete cascade,
   start_date date not null,
   end_date date not null,           -- 하루면 start=end
-  type text not null check (type in ('vacation','annual','training','out','etc')),
+  type text not null check (type in ('vacation','annual','training','out','family','etc')),
   memo text,
   created_at timestamptz default now()
 );

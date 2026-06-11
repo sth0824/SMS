@@ -1,10 +1,17 @@
-export type AbsenceType = "vacation" | "annual" | "training" | "out" | "etc";
+export type AbsenceType =
+  | "vacation"
+  | "annual"
+  | "training"
+  | "out"
+  | "family"
+  | "etc";
 
 export const ABSENCE_LABELS: Record<AbsenceType, string> = {
   vacation: "휴가",
   annual: "연차",
   training: "연차교육",
   out: "외출",
+  family: "패밀리데이",
   etc: "기타",
 };
 
@@ -13,6 +20,7 @@ export const ABSENCE_COLORS: Record<AbsenceType, string> = {
   annual: "#16A085",
   training: "#8E44AD",
   out: "#F39C12",
+  family: "#E84393",
   etc: "#717171",
 };
 
