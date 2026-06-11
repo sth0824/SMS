@@ -30,11 +30,16 @@ export interface GridDay {
   weekday: number; // 0=일 ~ 6=토
 }
 
-export function buildMonthGrid(year: number, month: number): GridDay[] {
+export function buildMonthGrid(
+  year: number,
+  month: number,
+  todayIso?: string | null
+): GridDay[] {
   // month: 0-indexed (0 = 1월)
+  // todayIso 는 호출부(클라이언트)에서 주입한다. SSR/정적 빌드 시점의 날짜가
+  // HTML 에 구워지는 것을 막기 위해, 값이 없으면 어떤 날도 '오늘'로 표시하지 않는다.
   const first = startOfMonth(new Date(year, month, 1));
   const gridStart = startOfWeek(first, { weekStartsOn: 0 });
-  const todayIso = toISODate(new Date());
 
   const days: GridDay[] = [];
   for (let i = 0; i < 42; i++) {
@@ -45,7 +50,7 @@ export function buildMonthGrid(year: number, month: number): GridDay[] {
       iso,
       day: date.getDate(),
       inMonth: date.getMonth() === month,
-      isToday: iso === todayIso,
+      isToday: todayIso != null && iso === todayIso,
       weekday: date.getDay(),
     });
   }

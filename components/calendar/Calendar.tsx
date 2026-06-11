@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { buildMonthGrid, WEEKDAY_LABELS } from "@/lib/date";
+import { buildMonthGrid, toISODate, WEEKDAY_LABELS } from "@/lib/date";
 import type {
   Absence,
   Assignment,
@@ -41,7 +41,17 @@ export default function Calendar({
   onDateClick,
   onRangeSelect,
 }: Props) {
-  const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
+  // "오늘"은 빌드/SSR 시점이 아니라 클라이언트 마운트 후에만 계산한다.
+  // (정적 생성 시 빌드 날짜가 '오늘'로 굳어버리는 버그 방지)
+  const [todayIso, setTodayIso] = useState<string | null>(null);
+  useEffect(() => {
+    setTodayIso(toISODate(new Date()));
+  }, []);
+
+  const grid = useMemo(
+    () => buildMonthGrid(year, month, todayIso),
+    [year, month, todayIso]
+  );
   const assignmentsByDate = useMemo(() => {
     const m = new Map<string, Assignment[]>();
     assignments.forEach((a) => {
