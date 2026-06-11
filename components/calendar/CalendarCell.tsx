@@ -9,7 +9,8 @@ import type {
   Member,
   ViewMode,
 } from "@/types";
-import { holidayName } from "@/lib/holidays";
+import { holidayName, isFamilyDay } from "@/lib/holidays";
+import BalloonIcon from "@/components/ui/BalloonIcon";
 import AbsencePill from "./AbsencePill";
 
 interface Props {
@@ -46,6 +47,7 @@ export default function CalendarCell({
   );
   const dayAvail = availability.filter((a) => a.date === day.iso);
   const holiday = holidayName(day.iso);
+  const familyDay = isFamilyDay(day.iso);
 
   const showAbsence = viewMode !== "overtime";
   const showOvertime = viewMode !== "attendance";
@@ -101,6 +103,20 @@ export default function CalendarCell({
             title={holiday}
           >
             {holiday}
+          </span>
+        )}
+
+        {familyDay && !holiday && (
+          <span
+            className="mt-0.5 flex items-center gap-0.5 truncate rounded-full px-1.5 text-[11px] font-semibold leading-tight"
+            style={{
+              backgroundColor: day.inMonth ? "#E843931F" : "#E8439310",
+              color: day.inMonth ? "#E84393" : "#E8439366",
+            }}
+            title="패밀리데이 (전 사원 휴무)"
+          >
+            <BalloonIcon className="h-3 w-3 shrink-0" />
+            <span className="truncate">패밀리데이</span>
           </span>
         )}
 

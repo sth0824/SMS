@@ -19,3 +19,11 @@ end $$;
 -- [기능 3] 부재 유형 직접 입력 (커스텀 라벨) --------------------------
 alter table absences
   add column if not exists label text;
+
+-- [기능 4] 부재 유형에 '패밀리데이'(family) 추가 ----------------------
+-- 월급날(21일)이 포함된 주의 금요일. 캘린더 자동 배지 + 수동 등록용.
+alter table absences
+  drop constraint if exists absences_type_check;
+alter table absences
+  add constraint absences_type_check
+  check (type in ('vacation','annual','training','out','family','etc'));
