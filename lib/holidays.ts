@@ -24,12 +24,20 @@ export function holidayName(iso: string): string | null {
  * 규칙: 월급날(21일)이 포함된 주(월~일)의 금요일.
  *  - 21일이 평일이면 그 주 금요일, 주말이면 같은 주의 (앞쪽) 금요일에 쉰다.
  *  - 금요일은 항상 19~25일 사이라 21일과 같은 달에 들어간다.
+ *  - 그 금요일이 공휴일이면 전 주 금요일로 앞당긴다. (예: 2026-12-25 기독탄신일 → 12-18)
  * @param month 0-indexed (0 = 1월)
  */
 export function familyDayOf(year: number, month: number): string {
   const payday = new Date(year, month, 21);
   const monday = startOfWeek(payday, { weekStartsOn: 1 });
-  return toISODate(addDays(monday, 4)); // 월요일 + 4 = 금요일
+  let friday = addDays(monday, 4); // 월요일 + 4 = 금요일
+
+  // 공휴일이면 전 주 금요일로 이월. 연휴가 여러 주 걸치는 경우까지 대비해 최대 3주 소급하며,
+  // 기준 금요일이 19~25일이라 3주를 당겨도 1~4일 → 항상 같은 달 안에 머문다.
+  for (let i = 0; i < 3 && holidayName(toISODate(friday)) !== null; i++) {
+    friday = addDays(friday, -7);
+  }
+  return toISODate(friday);
 }
 
 /** 해당 ISO 날짜가 그 달의 패밀리데이인지 */
